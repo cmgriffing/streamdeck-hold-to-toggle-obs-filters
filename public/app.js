@@ -20,220 +20,229 @@ obs.connect();
 // wire up reconnect events
 
 async function connected(jsn) {
-	//const { context } = jsn.actionInfo;
-	let context = "testing";
+  //const { context } = jsn.actionInfo;
+  let context = "testing";
 
-	this.filtersList = [];
-	this.settings = {};
+  this.filtersList = [];
+  this.settings = {};
 
-	/** subscribe to the willAppear and other events */
-	$SD.on("com.cmgriffing.hold-to-activate-vsts.action.willAppear", jsonObj => {
-		action.onWillAppear(jsonObj);
+  /** subscribe to the willAppear and other events */
+  $SD.on("com.cmgriffing.hold-to-activate-vsts.action.willAppear", jsonObj => {
+    action.onWillAppear(jsonObj);
 
-		this.settings = jsonObj.payload.settings;
+    this.settings[jsonObj.context] = jsonObj.payload.settings;
 
-		setTimeout(() => {
-			console.log("getting filters in will appear", {
-				source: this.settings.selectedSource
-			});
-			obs
-				.send("GetSourceFilters", {
-					sourceName: this.settings.selectedSource
-				})
-				.then(filterResult => {
-					console.log({ filterResult });
-					this.filtersList = filterResult.filters;
-				});
-		}, 1000);
-	});
-	$SD.on("com.cmgriffing.hold-to-activate-vsts.action.keyUp", jsonObj => {
-		console.log(
-			"handle keyUp",
-			this.filtersList,
-			this.settings,
-			obs._connected
-		);
-		this.filtersList
-			.filter(filter => {
-				return this.settings.selectedFilters.indexOf(filter.name) > -1;
-			})
-			.map(filter => {
-				return obs.send("SetSourceFilterVisibility", {
-					sourceName: this.settings.selectedSource,
-					filterName: filter.name,
-					filterEnabled: filter.enabled
-				});
-			});
-	});
-	$SD.on("com.cmgriffing.hold-to-activate-vsts.action.keyDown", jsonObj => {
-		console.log("handle keyDown");
-		this.filtersList
-			.filter(filter => {
-				return this.settings.selectedFilters.indexOf(filter.name) > -1;
-			})
-			.map(filter => {
-				return obs.send("SetSourceFilterVisibility", {
-					sourceName: this.settings.selectedSource,
-					filterName: filter.name,
-					filterEnabled: !filter.enabled
-				});
-			});
-	});
-	$SD.on("com.cmgriffing.hold-to-activate-vsts.action.sendToPlugin", jsonObj =>
-		action.onSendToPlugin(jsonObj)
-	);
-	$SD.on(
-		"com.cmgriffing.hold-to-activate-vsts.action.didReceiveSettings",
-		jsonObj => {
-			action.onDidReceiveSettings(jsonObj);
-			console.log({ settings: jsonObj });
-			const oldSettings = this.settings;
-			this.settings = jsonObj.payload.settings;
+    setTimeout(() => {
+      console.log("getting filters in will appear", {
+        source: this.settings[jsonObj.context].selectedSource
+      });
+      obs
+        .send("GetSourceFilters", {
+          sourceName: this.settings[jsonObj.context].selectedSource
+        })
+        .then(filterResult => {
+          console.log({ filterResult });
+          this.filtersList = filterResult.filters;
+        });
+    }, 1000);
+  });
+  $SD.on("com.cmgriffing.hold-to-activate-vsts.action.keyUp", jsonObj => {
+    console.log(
+      "handle keyUp",
+      this.filtersList,
+      this.settings,
+      obs._connected
+    );
+    this.filtersList
+      .filter(filter => {
+        return (
+          this.settings[jsonObj.context].selectedFilters.indexOf(filter.name) >
+          -1
+        );
+      })
+      .map(filter => {
+        return obs.send("SetSourceFilterVisibility", {
+          sourceName: this.settings[jsonObj.context].selectedSource,
+          filterName: filter.name,
+          filterEnabled: filter.enabled
+        });
+      });
+  });
+  $SD.on("com.cmgriffing.hold-to-activate-vsts.action.keyDown", jsonObj => {
+    console.log("handle keyDown", jsonObj);
+    this.filtersList
+      .filter(filter => {
+        return (
+          this.settings[jsonObj.context].selectedFilters.indexOf(filter.name) >
+          -1
+        );
+      })
+      .map(filter => {
+        return obs.send("SetSourceFilterVisibility", {
+          sourceName: this.settings[jsonObj.context].selectedSource,
+          filterName: filter.name,
+          filterEnabled: !filter.enabled
+        });
+      });
+  });
+  $SD.on("com.cmgriffing.hold-to-activate-vsts.action.sendToPlugin", jsonObj =>
+    action.onSendToPlugin(jsonObj)
+  );
+  $SD.on(
+    "com.cmgriffing.hold-to-activate-vsts.action.didReceiveSettings",
+    jsonObj => {
+      action.onDidReceiveSettings(jsonObj);
+      console.log({ settings: jsonObj });
+      const oldSettings = this.settings;
+      this.settings[jsonObj.context] = jsonObj.payload.settings;
 
-			if (this.settings.selectedSource !== oldSettings.selectedSource) {
-				obs
-					.send("GetSourceFilters", {
-						sourceName: this.settings.selectedSource
-					})
-					.then(filterResult => {
-						this.filtersList = filterResult.filters;
-					});
-			}
-		}
-	);
-	$SD.on(
-		"com.cmgriffing.hold-to-activate-vsts.action.propertyInspectorDidAppear",
-		jsonObj => {
-			context = jsonObj.context;
-			console.log(
-				"%c%s",
-				"color: white; background: black; font-size: 13px;",
-				"[app.js]propertyInspectorDidAppear:",
-				jsonObj
-			);
-			$SD.api.getSettings(context);
-		}
-	);
-	$SD.on(
-		"com.cmgriffing.hold-to-activate-vsts.action.propertyInspectorDidDisappear",
-		jsonObj => {
-			console.log(
-				"%c%s",
-				"color: white; background: red; font-size: 13px;",
-				"[app.js]propertyInspectorDidDisappear:"
-			);
-		}
-	);
+      if (
+        this.settings[jsonObj.context].selectedSource !==
+        oldSettings.selectedSource
+      ) {
+        obs
+          .send("GetSourceFilters", {
+            sourceName: this.settings[jsonObj.context].selectedSource
+          })
+          .then(filterResult => {
+            this.filtersList = filterResult.filters;
+          });
+      }
+    }
+  );
+  $SD.on(
+    "com.cmgriffing.hold-to-activate-vsts.action.propertyInspectorDidAppear",
+    jsonObj => {
+      context = jsonObj.context;
+      console.log(
+        "%c%s",
+        "color: white; background: black; font-size: 13px;",
+        "[app.js]propertyInspectorDidAppear:",
+        jsonObj
+      );
+      $SD.api.getSettings(context);
+    }
+  );
+  $SD.on(
+    "com.cmgriffing.hold-to-activate-vsts.action.propertyInspectorDidDisappear",
+    jsonObj => {
+      console.log(
+        "%c%s",
+        "color: white; background: red; font-size: 13px;",
+        "[app.js]propertyInspectorDidDisappear:"
+      );
+    }
+  );
 }
 
 /** ACTIONS */
 
 const action = {
-	settings: {},
-	onDidReceiveSettings: function(jsn) {
-		console.log(
-			"%c%s",
-			"color: white; background: red; font-size: 15px;",
-			"[app.js]onDidReceiveSettings:"
-		);
-		this.settings = Utils.getProp(jsn, "payload.settings", {});
-		this.doSomeThing(this.settings, "onDidReceiveSettings", "orange");
+  settings: {},
+  onDidReceiveSettings: function(jsn) {
+    console.log(
+      "%c%s",
+      "color: white; background: red; font-size: 15px;",
+      "[app.js]onDidReceiveSettings:"
+    );
+    this.settings = Utils.getProp(jsn, "payload.settings", {});
+    this.doSomeThing(this.settings, "onDidReceiveSettings", "orange");
 
-		/**
-		 * In this example we put a HTML-input element with id='mynameinput'
-		 * into the Property Inspector's DOM. If you enter some data into that
-		 * input-field it get's saved to Stream Deck persistently and the plugin
-		 * will receice the updated 'didReceiveSettings' event.
-		 * Here we look for this setting and use it to change the title of
-		 * the key.
-		 */
+    /**
+     * In this example we put a HTML-input element with id='mynameinput'
+     * into the Property Inspector's DOM. If you enter some data into that
+     * input-field it get's saved to Stream Deck persistently and the plugin
+     * will receice the updated 'didReceiveSettings' event.
+     * Here we look for this setting and use it to change the title of
+     * the key.
+     */
 
-		//this.setTitle(jsn);
-	},
+    //this.setTitle(jsn);
+  },
 
-	/**
-	 * The 'willAppear' event is the first event a key will receive, right before it gets
-	 * showed on your Stream Deck and/or in Stream Deck software.
-	 * This event is a good place to setup your plugin and look at current settings (if any),
-	 * which are embedded in the events payload.
-	 */
+  /**
+   * The 'willAppear' event is the first event a key will receive, right before it gets
+   * showed on your Stream Deck and/or in Stream Deck software.
+   * This event is a good place to setup your plugin and look at current settings (if any),
+   * which are embedded in the events payload.
+   */
 
-	onWillAppear: function(jsn) {
-		console.log(
-			"You can cache your settings in 'onWillAppear'",
-			jsn.payload.settings
-		);
+  onWillAppear: function(jsn) {
+    console.log(
+      "You can cache your settings in 'onWillAppear'",
+      jsn.payload.settings
+    );
 
-		/**
-		 * "The willAppear event carries your saved settings (if any). You can use these settings
-		 * to setup your plugin or save the settings for later use.
-		 * If you want to request settings at a later time, you can do so using the
-		 * 'getSettings' event, which will tell Stream Deck to send your data
-		 * (in the 'didReceiceSettings above)
-		 *
-		 * $SD.api.getSettings(jsn.context);
-		 */
+    /**
+     * "The willAppear event carries your saved settings (if any). You can use these settings
+     * to setup your plugin or save the settings for later use.
+     * If you want to request settings at a later time, you can do so using the
+     * 'getSettings' event, which will tell Stream Deck to send your data
+     * (in the 'didReceiceSettings above)
+     *
+     * $SD.api.getSettings(jsn.context);
+     */
 
-		// nothing in the settings pre-fill something just for demonstration purposes
-		// if (!this.settings || Object.keys(this.settings).length === 0) {
-		//     this.settings.mynameinput = 'TEMPLATE';
-		// }
-		// this.setTitle(jsn);
-	},
+    // nothing in the settings pre-fill something just for demonstration purposes
+    // if (!this.settings || Object.keys(this.settings).length === 0) {
+    //     this.settings.mynameinput = 'TEMPLATE';
+    // }
+    // this.setTitle(jsn);
+  },
 
-	onKeyUp: async function(jsn) {
-		console.log("onKeyUp", jsn);
-	},
+  onKeyUp: async function(jsn) {
+    console.log("onKeyUp", jsn);
+  },
 
-	onSendToPlugin: function(jsn) {
-		/**
-		 * this is a message sent directly from the Property Inspector
-		 * (e.g. some value, which is not saved to settings)
-		 * You can send this event from Property Inspector (see there for an example)
-		 */
+  onSendToPlugin: function(jsn) {
+    /**
+     * this is a message sent directly from the Property Inspector
+     * (e.g. some value, which is not saved to settings)
+     * You can send this event from Property Inspector (see there for an example)
+     */
 
-		const sdpi_collection = Utils.getProp(jsn, "payload.sdpi_collection", {});
-		if (sdpi_collection.value && sdpi_collection.value !== undefined) {
-			this.doSomeThing(
-				{ [sdpi_collection.key]: sdpi_collection.value },
-				"onSendToPlugin",
-				"fuchsia"
-			);
-		}
-	},
+    const sdpi_collection = Utils.getProp(jsn, "payload.sdpi_collection", {});
+    if (sdpi_collection.value && sdpi_collection.value !== undefined) {
+      this.doSomeThing(
+        { [sdpi_collection.key]: sdpi_collection.value },
+        "onSendToPlugin",
+        "fuchsia"
+      );
+    }
+  },
 
-	/**
-	 * Here's a quick demo-wrapper to show how you could change a key's title based on what you
-	 * stored in settings.
-	 * If you enter something into Property Inspector's name field (in this demo),
-	 * it will get the title of your key.
-	 *
-	 * @param {JSON} jsn // the JSON object passed from Stream Deck to the plugin, which contains the plugin's context
-	 *
-	 */
+  /**
+   * Here's a quick demo-wrapper to show how you could change a key's title based on what you
+   * stored in settings.
+   * If you enter something into Property Inspector's name field (in this demo),
+   * it will get the title of your key.
+   *
+   * @param {JSON} jsn // the JSON object passed from Stream Deck to the plugin, which contains the plugin's context
+   *
+   */
 
-	setTitle: function(jsn) {
-		if (this.settings && this.settings.hasOwnProperty("mynameinput")) {
-			console.log(
-				"watch the key on your StreamDeck - it got a new title...",
-				this.settings.mynameinput
-			);
-			$SD.api.setTitle(jsn.context, this.settings.mynameinput);
-		}
-	},
+  setTitle: function(jsn) {
+    if (this.settings && this.settings.hasOwnProperty("mynameinput")) {
+      console.log(
+        "watch the key on your StreamDeck - it got a new title...",
+        this.settings.mynameinput
+      );
+      $SD.api.setTitle(jsn.context, this.settings.mynameinput);
+    }
+  },
 
-	/**
-	 * Finally here's a methood which gets called from various events above.
-	 * This is just an idea how you can act on receiving some interesting message
-	 * from Stream Deck.
-	 */
+  /**
+   * Finally here's a methood which gets called from various events above.
+   * This is just an idea how you can act on receiving some interesting message
+   * from Stream Deck.
+   */
 
-	doSomeThing: function(inJsonData, caller, tagColor) {
-		console.log(
-			"%c%s",
-			`color: white; background: ${tagColor || "grey"}; font-size: 15px;`,
-			`[app.js]doSomeThing from: ${caller}`
-		);
-		// console.log(inJsonData);
-	}
+  doSomeThing: function(inJsonData, caller, tagColor) {
+    console.log(
+      "%c%s",
+      `color: white; background: ${tagColor || "grey"}; font-size: 15px;`,
+      `[app.js]doSomeThing from: ${caller}`
+    );
+    // console.log(inJsonData);
+  }
 };

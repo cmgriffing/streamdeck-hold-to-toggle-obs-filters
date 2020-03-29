@@ -1,16 +1,13 @@
 {
-  "Description": "Nimm diese Vorlage für dein erstes Plugin", 
-  "Name": "Stream Deck Template", 
-  "Category": "Templates", 
-  "com.elgato.template.action": {
-    "Name": "Action", 
-    "Tooltip": "Dies ist die einzige 'Action' in diesem Template"
+  "Description": "This action can toggle multiple filters on a selected source when the StreamDeck button is held. The filters toggle back when released.",
+  "Name": "Hold To Activate OBS Filters",
+  "Category": "Streaming",
+  "com.cmgriffing.hold-to-activate-obs-filters.action": {
+    "Name": "Action",
+    "Tooltip": "Hold to toggle the selected filters for a source"
   },
   "Localization": {
-    "More info": "Mehr Infos",
-    "Message": "Nachricht",
-    "Click Me": "Klicke mich",
-    "Button": "Taste"
-
+    "Sources": "Quellen",
+    "Filters": "Filters"
   }
 }

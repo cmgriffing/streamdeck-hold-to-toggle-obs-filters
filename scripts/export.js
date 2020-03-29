@@ -1,5 +1,5 @@
 const os = require("os");
-const fs = require("fs");
+const fs = require("fs-extra");
 const path = require("path");
 const http = require("https");
 const child_process = require("child_process");
@@ -60,8 +60,8 @@ http
 
           console.log("Running distribution tool");
           try {
-            child_process.execSync(
-              `rm ./Release/com.cmgriffing.hold-to-activate-vsts.streamDeckPlugin`
+            fs.removeSync(
+              `./Release/com.cmgriffing.hold-to-activate-vsts.streamDeckPlugin`
             );
             child_process.execSync(
               `./${currentPlatform.distributionToolFilename} -b -i ./build/com.cmgriffing.hold-to-activate-vsts.sdPlugin -o ./Release`
@@ -82,7 +82,7 @@ http
   )
   .on("error", function(err) {
     // Handle errors
-    fs.unlink(dest);
+    // fs.unlink(dest);
     console.log("Error fetching DistributionTool for your platform.");
     process.exit(-1);
   });
